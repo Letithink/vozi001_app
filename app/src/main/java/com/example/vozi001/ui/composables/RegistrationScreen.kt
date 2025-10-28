@@ -1,4 +1,4 @@
-package com.example.vozi001
+package com.example.vozi001.ui.composables
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
@@ -19,9 +19,10 @@ import com.example.vozi001.ui.theme.VoziBlue
 import com.example.vozi001.ui.theme.VoziWhite
 import com.example.vozi001.ui.theme.VoziBlack
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegistrationScreen(
-    onRegisterClicked: (String, String, String) -> Unit,
+    onRegisterClicked: (String, String, String, String) -> Unit, // Ahora con rol
     onBackClicked: () -> Unit
 ) {
     var name by remember { mutableStateOf("") }
@@ -30,6 +31,8 @@ fun RegistrationScreen(
     var confirmPassword by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
+    var selectedRole by remember { mutableStateOf("niño") }
+    var expanded by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -79,6 +82,77 @@ fun RegistrationScreen(
                 unfocusedLabelColor = VoziBlack
             )
         )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Selector de Rol
+        Text(
+            text = "Tipo de Usuario",
+            style = MaterialTheme.typography.bodyMedium,
+            color = VoziBlack,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = !expanded }
+        ) {
+            OutlinedTextField(
+                readOnly = true,
+                value = when(selectedRole) {
+                    "niño" -> "👦 Niño"
+                    "padre" -> "👨 Padre/Madre"
+                    "terapeuta" -> "👩‍⚕️ Terapeuta"
+                    else -> "👦 Niño"
+                },
+                onValueChange = { },
+                label = { Text("Selecciona tu rol") },
+                trailingIcon = {
+                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = VoziBlue,
+                    unfocusedTextColor = VoziBlue,
+                    cursorColor = VoziBlue,
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    focusedBorderColor = VoziBlue,
+                    unfocusedBorderColor = VoziBlack,
+                    focusedLabelColor = VoziBlue,
+                    unfocusedLabelColor = VoziBlack
+                )
+            )
+
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text("👦 Niño") },
+                    onClick = {
+                        selectedRole = "niño"
+                        expanded = false
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text("👨 Padre/Madre") },
+                    onClick = {
+                        selectedRole = "padre"
+                        expanded = false
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text("👩‍⚕️ Terapeuta") },
+                    onClick = {
+                        selectedRole = "terapeuta"
+                        expanded = false
+                    }
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -171,7 +245,7 @@ fun RegistrationScreen(
         Button(
             onClick = {
                 if (password == confirmPassword) {
-                    onRegisterClicked(name, email, password)
+                    onRegisterClicked(name, email, password, selectedRole)
                 } else {
                     // Aquí podrías mostrar un Toast o mensaje de error
                 }

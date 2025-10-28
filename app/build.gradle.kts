@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.example.vozi001"
-    compileSdk = 34  // CAMBIO: Bajar a 34 (más estable)
+    compileSdk = 35  // CAMBIO: Bajar a 34 (más estable)
     buildToolsVersion = "34.0.0"
 
     defaultConfig {
@@ -48,6 +48,11 @@ android {
 }
 
 dependencies {
+    implementation("com.google.firebase:firebase-perf-ktx:20.5.1")
+    implementation("com.google.firebase:firebase-perf-http:20.5.1")
+
+    implementation("androidx.navigation:navigation-compose:2.7.5")
+
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation("androidx.activity:activity-compose:1.8.2")
@@ -62,6 +67,8 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-analytics-ktx")
+    implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation(libs.androidx.navigation.compose)
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")

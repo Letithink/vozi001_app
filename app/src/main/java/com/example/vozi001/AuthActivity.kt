@@ -9,12 +9,17 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.example.vozi001.ui.composables.LoginScreen
+import com.example.vozi001.ui.composables.RegistrationScreen
+import com.example.vozi001.ui.composables.RegistrationSuccessScreen
 import com.example.vozi001.ui.theme.Vozi001Theme
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.firestore.FirebaseFirestore
 
 class AuthActivity : ComponentActivity() {
 
@@ -45,13 +50,14 @@ class AuthActivity : ComponentActivity() {
                     }
                     showRegistrationScreen -> {
                         RegistrationScreen(
-                            onRegisterClicked = { nombre, email, password ->
-                                registrarUsuario(nombre, email, password)
+                            onRegisterClicked = { nombre, email, password, rol ->
+                                registrarUsuario(nombre, email, password, rol)
                             },
                             onBackClicked = {
-                                showRegistrationScreen = false // Volver al login
+                                showRegistrationScreen = false
                             }
                         )
+
                     }
                     else -> {
                         LoginScreen(
@@ -103,7 +109,8 @@ class AuthActivity : ComponentActivity() {
             }
     }
 
-    private fun registrarUsuario(nombre: String, email: String, password: String) {
+    // En AuthActivity, actualiza el método registrarUsuario
+    private fun registrarUsuario(nombre: String, email: String, password: String, rol: String) {
         if (nombre.isEmpty() || email.isEmpty() || password.isEmpty()) {
             Toast.makeText(this, "Por favor, completa todos los campos.", Toast.LENGTH_SHORT).show()
             return
@@ -114,15 +121,38 @@ class AuthActivity : ComponentActivity() {
             return
         }
 
-        println("DEBUG: Intentando registro con: $email")
+        println("DEBUG: Intentando registro con: $email - Rol: $rol")
         Toast.makeText(this, "Creando cuenta...", Toast.LENGTH_SHORT).show()
 
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
-                    println("DEBUG: Registro EXITOSO - Usuario: ${auth.currentUser?.email}")
-                    showRegistrationSuccess = true
-                    Toast.makeText(this, "Cuenta creada exitosamente.", Toast.LENGTH_SHORT).show()
+                    val user = auth.currentUser
+                    user?.let { firebaseUser ->
+                        // Guardar información adicional del usuario en Firestore
+                        val userData = hashMapOf(
+                            "nombre" to nombre,
+                            "email" to email,
+                            "rol" to rol,
+                            "fechaRegistro" to com.google.firebase.Timestamp.now(),
+                            "uid" to firebaseUser.uid
+                        )
+
+                        FirebaseFirestore.getInstance().collection("users")
+                            .document(firebaseUser.uid)
+                            .set(userData)
+                            .addOnSuccessListener {
+                                println("DEBUG: Registro EXITOSO - Usuario: ${firebaseUser.email} - Rol: $rol")
+                                showRegistrationSuccess = true
+                                Toast.makeText(this, "Cuenta creada exitosamente.", Toast.LENGTH_SHORT).show()
+                            }
+                            .addOnFailureListener { e ->
+                                println("DEBUG: Error al guardar datos de usuario: ${e.message}")
+                                // Aún así mostramos éxito, pero hay un error secundario
+                                showRegistrationSuccess = true
+                                Toast.makeText(this, "Cuenta creada, pero error al guardar información adicional.", Toast.LENGTH_LONG).show()
+                            }
+                    }
                 } else {
                     println("DEBUG: Registro FALLIDO - Error: ${task.exception?.message}")
                     val errorMessage = when (task.exception) {
@@ -135,6 +165,7 @@ class AuthActivity : ComponentActivity() {
                 }
             }
     }
+
 
     private fun cerrarSesion() {
         auth.signOut()

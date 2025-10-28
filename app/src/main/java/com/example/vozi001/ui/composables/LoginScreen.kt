@@ -1,4 +1,4 @@
-package com.example.vozi001
+package com.example.vozi001.ui.composables
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
